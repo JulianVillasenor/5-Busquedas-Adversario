@@ -17,6 +17,8 @@ class UltimateGato(ModeloJuegoZT2):
     
 
     def jugadas_legales(self, s, j):
+        # s: estado actual del juego, jugador actual: 1 para X -1 para O
+        # retorna una tupla(del tablero y la posicion) 
         tableros, grandes, turno, sig = s
         jugadas = []
         if sig == -1: #si se puede jugar en cualquier tablero
@@ -33,6 +35,7 @@ class UltimateGato(ModeloJuegoZT2):
         return jugadas
 
     def transicion(self, s, a, j):
+        #a: accion, jugada , j: jugador actual
         tableros, grandes, turno, sig = s
         i, jdx = a #(i= tablero chico, jdx=posicion)
         nuevo_tablero = list(tableros[i])
@@ -53,15 +56,19 @@ class UltimateGato(ModeloJuegoZT2):
         return (tuple(nuevos_tableros), tuple(nuevo_grandes), -turno, siguiente) #regresa el nuevo estado con el jugador siguiente y el siguiente mini
 
     def terminal(self, s):
+        #determina si el juego esta terminado, devolviendo True en caso de que este terminado (ganador o empate)
         _, grandes, _, _ = s
         return self.terminal_tablero(grandes)
 
     def ganancia(self, s):
+        #determina el ganador del juego
+        #retorna 1 para X, -1 para O, 2 para gato
         _, grandes, _, _ = s
         return self.ganador_tablero(grandes)
 
     def terminal_tablero(self, t):
         # t puede ser un tablero chico o el grande
+        #retorna True si hay tres en linea o el tablero esta completo
         if t[0] == t[4] == t[8] != 0: return True #revisar diagonal abajo ->
         if t[2] == t[4] == t[6] != 0: return True #revisar diagonal <- abajo
         for i in range(3): 
@@ -70,6 +77,7 @@ class UltimateGato(ModeloJuegoZT2):
         return all(x != 0 for x in t) #Gano el gato
 
     def ganador_tablero(self, t):
+        #retorna: 1 para X, -1 para O, 0 no decidio
         if t[0] == t[4] == t[8] != 0: return t[0]
         if t[2] == t[4] == t[6] != 0: return t[2]
         for i in range(3):
