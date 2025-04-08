@@ -3,6 +3,7 @@ from juegos_simplificado import juega_dos_jugadores
 from juegos_simplificado import minimax
 from minimax import jugador_negamax
 
+
 class UltimateGato(ModeloJuegoZT2):
     def inicializa(self):
         # Representamos el estado como una tupla:
@@ -11,7 +12,9 @@ class UltimateGato(ModeloJuegoZT2):
         # - tablero_grande: tupla de 9 enteros que indica si se ganó cada tablero chico (0: no ganado, 1: X, -1: O, 2: empate)
         # - turno: 1 para X, -1 para O
         # - siguiente_tablero: índice del tablero donde debe jugarse (0-8), o -1 si el jugador puede elegir
-        return (tuple([tuple([0]*9) for _ in range(9)]), tuple([0]*9), 1, -1)
+        estado = (tuple([tuple([0]*9) for _ in range(9)]), tuple([0]*9), 1, -1) 
+        return estado, 1
+    
 
     def jugadas_legales(self, s, j):
         tableros, grandes, turno, sig = s
@@ -64,7 +67,7 @@ class UltimateGato(ModeloJuegoZT2):
         for i in range(3): 
             if t[3*i] == t[3*i+1] == t[3*i+2] != 0: return True #filas
             if t[i] == t[i+3] == t[i+6] != 0: return True #columnas
-        return all(x != 0 for x in t) #Gano el gato?
+        return all(x != 0 for x in t) #Gano el gato
 
     def ganador_tablero(self, t):
         if t[0] == t[4] == t[8] != 0: return t[0]
@@ -76,3 +79,90 @@ class UltimateGato(ModeloJuegoZT2):
 
 # Puedes desarrollar pprint_ultimate, jugador_manual_ultimate y una funcion juega_ultimate
 # similar a juega_gato para probar este juego interactivamente.
+def pprint_ultimate(s):
+    """
+    Imprime el estado del juego de Ultimate Gato de manera legible.
+    """
+    tableros, grandes, turno, sig = s
+    def simbolo(x, i): 
+        return ' X ' if x == 1 else ' O ' if x == -1 else str(i).center(3)
+    
+    filas = []
+    for bloque_fila in range(3):
+        bloque = ["", "", ""]
+        for bloque_col in range(3):
+            tablero_idx = bloque_fila * 3 + bloque_col
+            tablero = tableros[tablero_idx]
+            linea = [simbolo(tablero[i], i) for i in range(9)]
+            bloque[0] += '|'.join(linea[0:3]) + ' || '
+            bloque[1] += '|'.join(linea[3:6]) + ' || '
+            bloque[2] += '|'.join(linea[6:9]) + ' || '
+        filas.extend(bloque)
+        filas.append('-'*35)
+    for linea in filas:
+        print(linea)
+
+
+        
+def jugador_manual_ultimate(juego, s, j):
+    """
+    Jugador manual para Ultimate Gato
+    """
+    pprint_ultimate(s)
+    print("Jugador:", 'X' if j == 1 else 'O')
+    jugadas = juego.jugadas_legales(s, j)
+    print("Jugadas legales:", jugadas)
+    
+    while True:
+        try:
+            entrada = input("Elige tu jugada como 'tablero,posicion': ")
+            i, jdx = map(int, entrada.strip().split(','))
+            if (i, jdx) in jugadas:
+                return (i, jdx)
+            else:
+                print("Jugada no válida. Intenta de nuevo.")
+        except Exception:
+            print("Entrada inválida. Usa el formato: tablero,posicion (ej. 4,7)")
+
+def jugador_minimax_ultimate(juego, s, j):
+    """
+    Jugador minimax para Ultimate Gato (puedes usar negamax también)
+    """
+    return minimax(juego, s, j)
+    # o return jugador_negamax(juego, s, j)
+def evalua_dummy(estado):
+    return 0
+
+def juega_ultimate(jugador='X'):
+    """
+    Ejecuta una partida de Ultimate Gato entre humano y AI
+    """
+    if jugador not in ['X', 'O']:
+        raise ValueError("El jugador solo puede tener los valores 'X' o 'O'")
+    
+    juego = UltimateGato()
+    print("ULTIMATE GATO")
+    print(f"Las 'X' siempre empiezan y tú juegas con '{jugador}'")
+    
+    if jugador == 'X':
+        g, s = juega_dos_jugadores(
+            juego,
+            jugador_manual_ultimate,
+            lambda j, e, ju: jugador_negamax(j, e , ju, d=3, evalua= evalua_dummy))
+    else:
+        g, s = juega_dos_jugadores(juego,
+                                    lambda j, e, ju: jugador_negamax(j, e, ju, d=3, evalua=evalua_dummy),
+                                      jugador_manual_ultimate)
+    
+    print("\nSE ACABÓ EL JUEGO\n")
+    pprint_ultimate(s)
+    
+    if g == 0:
+        print("\nEmpate, qué triste.")
+    elif (g == 1 and jugador == 'X') or (g == -1 and jugador == 'O'):
+        print("\nGanaste, debe ser pura suerte.")
+    else:
+        print("\nPerdiste, la máquina manda.")
+
+if __name__ == '__main__':
+    juega_ultimate('X')  # Empieza jugando X
